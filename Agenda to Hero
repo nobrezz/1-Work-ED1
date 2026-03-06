@@ -1,0 +1,135 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_CONTATOS 100
+#define TAM_NOME 128
+#define TAM_TEL 32
+
+typedef struct {
+    char nome[TAM_NOME];
+    char telefone[TAM_TEL];
+} Contato;
+
+void abrirArquivo(Contato agenda[], int *total) {
+    FILE *arquivo = fopen("agenda.csv", "r");
+
+    if (arquivo == NULL) {
+        return;
+    }
+
+    while (fscanf(arquivo, "%127[^,],%31[^\n]\n",
+           agenda[*total].nome,
+           agenda[*total].telefone) == 2) {
+
+        (*total)++;
+
+        if (*total >= MAX_CONTATOS) {
+            break;
+        }
+    }
+
+    fclose(arquivo);
+}
+
+void salvarArquivo(Contato agenda[], int total) {
+    FILE *arquivo = fopen("agenda.csv", "w");
+
+    if (arquivo == NULL) {
+        printf("Erro ao salvar arquivo\n");
+        return;
+    }
+
+    for (int i = 0; i < total; i++) {
+        fprintf(arquivo, "%s,%s\n",
+                agenda[i].nome,
+                agenda[i].telefone);
+    }
+
+    fclose(arquivo);
+
+    printf("Contatos salvos no arquivo agenda.csv\n");
+}
+
+void novoContato(Contato agenda[], int *total) {
+
+    if (*total >= MAX_CONTATOS) {
+        printf("Agenda cheia\n");
+        return;
+    }
+
+    getchar();
+
+    printf("Nome: ");
+    fgets(agenda[*total].nome, TAM_NOME, stdin);
+    agenda[*total].nome[strcspn(agenda[*total].nome, "\n")] = 0;
+
+    printf("Telefone: ");
+    fgets(agenda[*total].telefone, TAM_TEL, stdin);
+    agenda[*total].telefone[strcspn(agenda[*total].telefone, "\n")] = 0;
+
+    (*total)++;
+
+    printf("Contato adicionado\n");
+}
+
+void exibirContatos(Contato agenda[], int total) {
+
+    if (total == 0) {
+        printf("Nenhum contato cadastrado\n");
+        return;
+    }
+
+    printf("\nLista de contatos\n\n");
+
+    for (int i = 0; i < total; i++) {
+        printf("%d - %s\n", i + 1, agenda[i].nome);
+        printf("Telefone: %s\n\n", agenda[i].telefone);
+    }
+}
+
+int main() {
+
+    Contato agenda[MAX_CONTATOS];
+    int totalContatos = 0;
+    int opcao;
+
+    abrirArquivo(agenda, &totalContatos);
+
+    do {
+
+        printf("\nAgenda Zero to Hero\n");
+        printf("1 - Novo contato\n");
+        printf("2 - Exibir contatos\n");
+        printf("3 - Salvar contatos\n");
+        printf("0 - Sair\n");
+
+        scanf("%d", &opcao);
+
+        switch (opcao) {
+
+            case 1:
+                novoContato(agenda, &totalContatos);
+                break;
+
+            case 2:
+                exibirContatos(agenda, totalContatos);
+                break;
+
+            case 3:
+                salvarArquivo(agenda, totalContatos);
+                break;
+
+            case 0:
+                salvarArquivo(agenda, totalContatos);
+                printf("Programa encerrado\n");
+                break;
+
+            default:
+                printf("Opcao invalida\n");
+        }
+
+    } while (opcao != 0);
+
+    return 0;
+}
